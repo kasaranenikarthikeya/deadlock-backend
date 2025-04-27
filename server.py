@@ -5,14 +5,33 @@ import logging
 
 app = Flask(__name__)
 
-# Enhanced CORS configuration with proper headers
-CORS(app, resources={
+# Enhanced CORS configuration
+cors = CORS(app, resources={
     r"/api/*": {
-        "origins": ["https://deadlock-p4ty.onrender.com"],
+        "origins": [
+            "https://deadlock-p4ty.onrender.com",
+            "http://localhost:5173"
+        ],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
+        "allow_headers": ["Content-Type"],
+        "supports_credentials": False,
+        "max_age": 600
     }
 })
+
+@app.after_request
+def add_cors_headers(response):
+    # Dynamically set allowed origin based on request
+    allowed_origins = [
+        "https://deadlock-p4ty.onrender.com",
+        "http://localhost:5173"
+    ]
+    origin = request.headers.get('Origin')
+    if origin in allowed_origins:
+        response.headers['Access-Control-Allow-Origin'] = origin
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
 
 graph = ResourceAllocationGraph()
 
