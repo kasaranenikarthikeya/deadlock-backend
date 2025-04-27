@@ -2,14 +2,17 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from graph import ResourceAllocationGraph
 import logging
+import os
 
 app = Flask(__name__)
+ALLOWED_ORIGINS = [
+    "https://deadlock-p4ty.onrender.com",
+    "http://localhost:5173"
+]
+
 CORS(app, resources={
     r"/api/*": {
-        "origins": [
-            "https://deadlock-p4ty.onrender.com",
-            "http://localhost:5173"
-        ],
+        "origins": ALLOWED_ORIGINS,
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type"],
         "supports_credentials": True,
@@ -21,18 +24,19 @@ graph = ResourceAllocationGraph()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Keep all route handlers unchanged
 @app.route('/api/<path:path>', methods=['OPTIONS'])
 def handle_options(path):
+    origin = request.headers.get('Origin')
     response = jsonify({'success': True})
-    response.headers['Access-Control-Allow-Origin'] = 'https://deadlock-p4ty.onrender.com'
+    if origin in ALLOWED_ORIGINS:
+        response.headers['Access-Control-Allow-Origin'] = origin
+    else:
+        response.headers['Access-Control-Allow-Origin'] = 'null'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     response.headers['Access-Control-Max-Age'] = '600'
     return response
-
-# [Keep all your existing routes unchanged]
 
 @app.route('/api/process', methods=['POST'])
 def add_process():
@@ -98,8 +102,6 @@ def remove_node(id):
         return jsonify({'success': success, 'graph': graph.get_graph_state()})
     except Exception as e:
         logger.error(f"Error removing node: {str(e)}")
-
-
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/edge', methods=['DELETE'])
@@ -170,4 +172,5 @@ def get_graph():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
