@@ -1,0 +1,7 @@
+
+#### 2. requirements.txt
+A `requirements.txt` file lists dependencies for easy installation.
+
+```text
+networkx>=3.1
+matplotlib>=3.8.0
