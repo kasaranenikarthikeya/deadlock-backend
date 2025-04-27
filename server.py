@@ -4,8 +4,15 @@ from graph import ResourceAllocationGraph
 import logging
 
 app = Flask(__name__)
-# Only change made - added your frontend URL to CORS
-CORS(app, resources={r"/api/*": {"origins": "https://deadlock-p4ty.onrender.com"}})
+
+# Enhanced CORS configuration with proper headers
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["https://deadlock-p4ty.onrender.com"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 graph = ResourceAllocationGraph()
 
